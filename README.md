@@ -17,6 +17,6 @@ Data is provided by DarkSky API, which is backed-up by a wide range of weather d
 
 ### Test apk:
 Try it:
-[test.apk](app/build.gradle)
+[test.apk](https://github.com/Osadchuk8/BitWeather-Android/blob/apk/app-debug.apk)
 
 
