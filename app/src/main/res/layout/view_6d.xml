@@ -22,7 +22,6 @@
         android:gravity="center"
         android:paddingLeft="20sp"
         android:paddingRight="20sp"
-        android:text="Morning"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         android:textColor="@android:color/white"
@@ -43,8 +42,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="5"
-            android:contentDescription="TODO"
-            android:src="@drawable/cond_cloudy" />
+            android:contentDescription="TODO" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -62,7 +60,6 @@
                 android:fontFamily="@font/roboto"
                 android:gravity="center"
                 android:maxLines="1"
-                android:text="+10"
                 android:textAlignment="center"
                 android:textAppearance="@style/TextAppearance.AppCompat.Display1"
                 android:textColor="@android:color/white"
@@ -81,7 +78,6 @@
                 android:fontFamily="@font/roboto"
                 android:gravity="center"
                 android:maxLines="1"
-                android:text="+10"
                 android:textAlignment="center"
                 android:textAppearance="@style/TextAppearance.AppCompat.Display1"
                 android:textColor="@android:color/white"
@@ -107,7 +103,6 @@
         android:fontFamily="@font/roboto"
         android:gravity="center"
         android:padding="0dp"
-        android:text="rain 2 mm"
         android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         android:textColor="@android:color/white"

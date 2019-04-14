@@ -2,11 +2,15 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
+        <!-- Customize your theme here.
+        gonna need  'android:fitsSystemWindows="true" '  for transparent status bar
+        -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:editTextColor">@color/snowColor</item>
-    </style>
+        <item name="colorControlNormal">@color/snowColor</item>
+        <item name="textAppearanceListItem">@color/snowColor</item>
+</style>"
 
 </resources>

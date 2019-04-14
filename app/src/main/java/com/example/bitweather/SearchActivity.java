@@ -33,6 +33,11 @@ public class SearchActivity extends AppCompatActivity {
 
 
         searchView = findViewById(R.id.sv_search);
+        searchView.setFocusableInTouchMode(true);
+        searchView.setFocusable(true);
+        searchView.requestFocus();
+
+
         layoutResults = findViewById(R.id.ll_table_results);
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -81,6 +86,14 @@ public class SearchActivity extends AppCompatActivity {
 
     }
 
+    public void onStart(){
+        super.onStart();
+        //TODO: solve focusing on searchview
+        searchView.setFocusableInTouchMode(true);
+        searchView.setFocusable(true);
+        searchView.requestFocus();
+    }
+
 
     private void geoCodeCityName(String searchStr){
         mLocationSrv.getAddressFromCityName(searchStr, new CompletionGeoAddress() {
@@ -125,6 +138,7 @@ public class SearchActivity extends AppCompatActivity {
 
                 TextView tv = new TextView(SearchActivity.this);
                 tv.setText(addressStr);
+                tv.setTextColor(getResources().getColor(R.color.snowColor));
 
                 LinearLayout.LayoutParams lllp = new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -132,7 +146,6 @@ public class SearchActivity extends AppCompatActivity {
                 tv.setLayoutParams(lllp);
 
                 tv.setTextSize(20);
-                tv.setBackgroundColor(getResources().getColor(R.color.honey));
                 tv.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

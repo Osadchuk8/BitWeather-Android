@@ -146,6 +146,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        ImageButton btnGps = findViewById(R.id.btn_gps);
+        btnGps.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v){
+                Log.d(TAG, "btnGps onClick()");
+                requestGpsWeather();
+
+            }
+
+        });
+
         //LAYOUT INIT END
 
 
@@ -197,6 +207,12 @@ public class MainActivity extends AppCompatActivity {
         //<<
 
         this.unitStrings = UnitsHelper.initStrings(AppShared.unitSys);
+    }
+
+    private void requestGpsWeather(){
+        AppShared.needsRefresh = true;
+        AppShared.needsGpsWeather = true;
+        requestWeather();
     }
 
     private void requestWeather(){
@@ -319,10 +335,6 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("DAILY[0]", daily.get(0).toString() );
 
-        tvTempHigh.setText(WeatherSrv.formatTemperatureString(daily.get(0).temperatureHigh, ""));
-        tvTempLow.setText(WeatherSrv.formatTemperatureString(daily.get(0).temperatureLow, ""));
-
-
         int sr = daily.get(0).sunriseTime;
         int ss = daily.get(0).sunsetTime;
         Log.d(TAG, "unix: sr/ss: "+sr+"/"+ss);
@@ -358,9 +370,10 @@ public class MainActivity extends AppCompatActivity {
         Log.d("daily \n" , daily.toString());
         int currentTempHigh = (int) daily.get(0).temperatureHigh;
         int currentTempLow = (int) daily.get(0).temperatureLow;
-
-        tvTempHigh.setText("⬆ " + DarkSkyForecast.formatTemperatureString(daily.get(0).temperatureHigh, "") );
-        tvTempLow.setText("⬇ ︎" + DarkSkyForecast.formatTemperatureString(daily.get(0).temperatureLow, ""));
+        tvTempHigh.setText("▲ " + DarkSkyForecast.formatTemperatureString(daily.get(0).temperatureHigh, "") );
+        tvTempHigh.setTextColor(getResources().getColor(R.color.snowColor));
+        tvTempLow.setText("▼ " + DarkSkyForecast.formatTemperatureString(daily.get(0).temperatureLow, ""));
+        tvTempLow.setTextColor(getResources().getColor(R.color.snowColor));
 
     }
 
@@ -372,19 +385,20 @@ public class MainActivity extends AppCompatActivity {
         List<View6d> views = new ArrayList<>();
 
         for(int i=0; i<=2; i++){
-            View6d v6d = (View6d) layout6d1.getChildAt(0);
+            View6d v6d = (View6d) layout6d1.getChildAt(i);
             views.add(v6d);
         }
         for(int i=0; i<=2; i++){
-            View6d v6d = (View6d) layout6d2.getChildAt(0);
+            View6d v6d = (View6d) layout6d2.getChildAt(i);
             views.add(v6d);
         }
 
         for (int i = 0; i<=5; i++){
 
             View v = views.get(i);
+            Log.d(TAG, "v6d: " + v);
             //((View6d) v).setChildViews(v);
-            DarkSkyForecast.Daily day = daily.get(i);
+            DarkSkyForecast.Daily day = daily.get(i+1);
 
             TextView tvTitle = v.findViewById(R.id.tv_6day_title);
             TextView tvTempHigh = v.findViewById(R.id.tv_6day_temp_high);
