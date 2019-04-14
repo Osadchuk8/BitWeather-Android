@@ -15,4 +15,8 @@ Lightweight  and simple weather app with all essential information on a single s
 ### Sources:
 Data is provided by DarkSky API, which is backed-up by a wide range of weather data sources of global and regional character.
 
+### Test apk:
+Try it:
+[a relative link](app/build/outputs/apk/debug/app-debug.apk)
+
 
