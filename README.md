@@ -17,6 +17,6 @@ Data is provided by DarkSky API, which is backed-up by a wide range of weather d
 
 ### Test apk:
 Try it:
-[a relative link](app/build/outputs/apk/debug/app-debug.apk)
+[test.apk](app/build.gradle)
 
 
