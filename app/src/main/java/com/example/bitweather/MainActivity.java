@@ -668,8 +668,8 @@ public class MainActivity extends AppCompatActivity {
 
             LinearLayout.LayoutParams lllp = new LinearLayout.LayoutParams(layout24h.getLayoutParams());
             lllp.width = scrollViewWidth *24 / 100;
-            lllp.height = scrollViewHeight * 3 / 10;
-            lllp.setMargins(1,0,1,0);
+            lllp.height = scrollViewHeight * 25 / 100;
+            lllp.setMargins(2,0,2,0);
             v.setLayoutParams(lllp);
 
         }

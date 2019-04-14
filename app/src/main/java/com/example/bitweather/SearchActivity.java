@@ -31,7 +31,6 @@ public class SearchActivity extends AppCompatActivity {
         setContentView(R.layout.activity_search);
         mLocationSrv = LocationService.getInstance(this);
 
-
         searchView = findViewById(R.id.sv_search);
         searchView.setFocusableInTouchMode(true);
         searchView.setFocusable(true);
@@ -39,6 +38,14 @@ public class SearchActivity extends AppCompatActivity {
 
 
         layoutResults = findViewById(R.id.ll_table_results);
+
+        searchView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                searchView.clearFocus();
+                searchView.requestFocus();
+            }
+        });
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -48,10 +55,8 @@ public class SearchActivity extends AppCompatActivity {
                 searchView.clearFocus();
                 return true;
             }
-
             @Override
             public boolean onQueryTextChange(String newText) {
-
                 handler.removeCallbacksAndMessages(null);
                 handler.postDelayed(new Runnable() {
                     @Override
@@ -61,13 +66,11 @@ public class SearchActivity extends AppCompatActivity {
                             resultMap.clear();
                             layoutResults.removeAllViews();
                         }
-
                         if(newText.length() > 2) {
                             geoCodeCityName(newText);
                         }
                     }
                 }, 700);
-
                 return false;
             }
         });
@@ -82,7 +85,6 @@ public class SearchActivity extends AppCompatActivity {
                 return false;
             }
         });
-
 
     }
 
@@ -145,7 +147,7 @@ public class SearchActivity extends AppCompatActivity {
                 lllp.setMargins(8,8,8,8);
                 tv.setLayoutParams(lllp);
 
-                tv.setTextSize(20);
+                tv.setTextSize(18);
                 tv.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {

@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="BitWeatheTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here.
         gonna need  'android:fitsSystemWindows="true" '  for transparent status bar
         -->
@@ -11,6 +11,7 @@
         <item name="android:editTextColor">@color/snowColor</item>
         <item name="colorControlNormal">@color/snowColor</item>
         <item name="textAppearanceListItem">@color/snowColor</item>
+        <item name="actionModeWebSearchDrawable">@drawable/btn_magnify</item>
 </style>"
 
 </resources>
