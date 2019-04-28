@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvTempHigh;
     private TextView tvTempLow;
     private ImageView ivCurrentIcon;
+    private ImageButton btnOptions;
 
     //Details
     private TextView tvDetailSummary;
@@ -134,6 +135,37 @@ public class MainActivity extends AppCompatActivity {
         tvDetailPressure = findViewById(R.id.tv_pressure);
         tvDetailSunrise = findViewById(R.id.tv_sunrise2);
         tvDetailSunset = findViewById(R.id.tv_sunset2);
+
+
+
+        LinearLayout llMenuOptions = findViewById(R.id.ll_menu_options);
+        llMenuOptions.setVisibility(View.GONE);
+
+        btnOptions = findViewById(R.id.btn_options);
+        btnOptions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(TAG, "btnSearch onClick()");
+                llMenuOptions.setVisibility(View.VISIBLE);
+
+                // comment ' android:animateLayoutChanges="true" ' in layout root node before manual anim
+                // manual anumation:
+                //llMenuOptions.animate().translationY(llMenuOptions.getHeight());
+                //
+
+                //toggle options
+
+            }
+        });
+
+
+        Button btnCloseOptions = findViewById(R.id.btn_close_options);
+        btnCloseOptions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                llMenuOptions.setVisibility(View.GONE);
+            }
+        });
 
 
         ImageButton btnSearch = findViewById(R.id.btn_search);

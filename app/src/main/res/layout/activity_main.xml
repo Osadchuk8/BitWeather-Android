@@ -5,6 +5,7 @@
     android:id="@+id/main_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
     tools:context=".MainActivity">
 
     <!--
@@ -528,6 +529,36 @@
         </ScrollView>
 
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_menu_options"
+        android:layout_width="363dp"
+        android:layout_height="589dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="731dp"
+        android:layout_marginEnd="10dp"
+        android:background="@color/honey"
+        android:orientation="vertical"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/rootLinearLayout">
+
+        <Button
+            android:id="@+id/btn_close_options"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="right"
+            android:text="X"
+            android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:srcCompat="@drawable/cond_cloudy" />
     </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
