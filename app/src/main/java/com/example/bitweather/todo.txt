@@ -1,0 +1,33 @@
+
+ldpi | mdpi | tvdpi | hdpi | xhdpi | xxhdpi | xxxhdpi
+0.75 | 1    | 1.33  | 1.5  | 2     | 3      | 4
+
+icon    120    x       180    240    360       480
+logo    342            513    684    1026      1368
+logoh   30             45     60     90        120
+btn     40     x       60     80     120       160
+
+bkgr
+
+
+1dp = 1px(mdpi)
+
+pixel xl is 560 dpi
+40dp is 140px on pixel xl => xxhdpi?
+
+140px = 40dp
+
+px = dp * (dpi / 160)
+dp = px * 160 / dpi
+
+1) logo:  342dp
+dp = 1198 * 160 / 560 = 342
+ 1198px
+
+ 2) buttons(140 on pixelxl)
+ dp = 140 * 160 / 560 = 40dp
+
+
+
+
+

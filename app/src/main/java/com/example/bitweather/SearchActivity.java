@@ -1,6 +1,5 @@
 package com.example.bitweather;
 
-import android.icu.util.TimeZone;
 import android.location.Location;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -32,10 +31,8 @@ public class SearchActivity extends AppCompatActivity {
         mLocationSrv = LocationService.getInstance(this);
 
         searchView = findViewById(R.id.sv_search);
-        searchView.setFocusableInTouchMode(true);
-        searchView.setFocusable(true);
-        searchView.requestFocus();
-
+       // ImageView searchIcon = searchView.findViewById(android.support.v7.appcompat.R.id.search_mag_icon); wrong id
+        //searchIcon.setColorFilter(Color.WHITE);
 
         layoutResults = findViewById(R.id.ll_table_results);
 
@@ -50,7 +47,7 @@ public class SearchActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                Log.d(TAG, "onQueryTextSubmit: " + query);
+               // Log.d(TAG, "onQueryTextSubmit: " + query);
                 geoCodeCityName(query);
                 searchView.clearFocus();
                 return true;
@@ -61,7 +58,7 @@ public class SearchActivity extends AppCompatActivity {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        Log.d(TAG, "onQueryTextChange: " + newText);
+                        //Log.d(TAG, "onQueryTextChange: " + newText);
                         if (newText.length() < 2){
                             resultMap.clear();
                             layoutResults.removeAllViews();
@@ -79,7 +76,7 @@ public class SearchActivity extends AppCompatActivity {
         searchView.setOnCloseListener(new SearchView.OnCloseListener() {
             @Override
             public boolean onClose() {
-                Log.d(TAG, "OnCloseListener.onClose()");
+                //Log.d(TAG, "OnCloseListener.onClose()");
                 resultMap.clear();
                 layoutResults.removeAllViews();
                 return false;
@@ -88,28 +85,33 @@ public class SearchActivity extends AppCompatActivity {
 
     }
 
-    public void onStart(){
-        super.onStart();
-        //TODO: solve focusing on searchview
-        searchView.setFocusableInTouchMode(true);
-        searchView.setFocusable(true);
-        searchView.requestFocus();
+    public void onResume(){
+        super.onResume();
+        Log.d(TAG, ".onResume()");
+
+        //* SOLUTION: focusing on searchview
+//        searchView.setFocusableInTouchMode(true);
+//        searchView.setFocusable(true);
+//        searchView.requestFocus();
+        searchView.onActionViewExpanded();
+        searchView.performClick();
+
     }
 
 
     private void geoCodeCityName(String searchStr){
-        mLocationSrv.getAddressFromCityName(searchStr, new CompletionGeoAddress() {
+        mLocationSrv.getAddressFromCityName(searchStr, new CompletionString() {
             @Override
-            public void completionGeocoderOk(String addressStr) {
-                Log.d(TAG, "found City:: " + addressStr);
+            public void completionStringOk(String addressStr) {
+                //Log.d(TAG, "found City:: " + addressStr);
                 mLocationSrv.getLocationFromCityName(addressStr, new CompletionGeoLocation() {
                     @Override
-                    public void completionGeocoderOk(Location location) {
+                    public void completionLocationOk(Location location) {
                        addResultToList(addressStr, location);
                     }
 
                     @Override
-                    public void completionGeocoderError(String error) {
+                    public void completionLocationError(String error) {
                         Log.d(TAG, "geoCodeCityName error, inner");
 
                     }
@@ -118,7 +120,7 @@ public class SearchActivity extends AppCompatActivity {
             }
 
             @Override
-            public void completionGeocoderError(String error) {
+            public void completionStringError(String error) {
                 Log.d(TAG, "geoCodeCityName error");
 
             }
@@ -169,7 +171,7 @@ public class SearchActivity extends AppCompatActivity {
         AppShared.isGps = false;
         AppShared.needsRefresh = true;
         AppShared.needsGpsWeather = false;
-        Log.d(TAG, "appshared.location = " + location.toString());
+        //Log.d(TAG, "appshared.location = " + location.toString());
     }
 
 

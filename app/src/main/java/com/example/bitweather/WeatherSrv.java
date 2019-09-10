@@ -53,7 +53,6 @@ public class WeatherSrv {
 
 
     public void requestWeather(Context ctx, UnitsHelper.UnitSystems units, Location location, CompletionForecast completion) {
-    //completionOk: @escaping((DarkSkyTypes.DarkSkyDecodedForecast)->()), completionError: @escaping(()->())){
 
         String unitsSpec = "?units=auto";
         switch (units) {
@@ -77,15 +76,7 @@ public class WeatherSrv {
         RequestQueue queue = Volley.newRequestQueue(ctx);
 
         String requestStr = ""+baseUrlStr+apiKey+"/"+ lat + "," + lon +unitsSpec;
-        Log.d("--DS request:   ", requestStr);
-
-     //TODO: unused
-//        try {
-//            URL url = new URL(urlStr);
-//        } catch (MalformedURLException e) {
-//            e.printStackTrace();
-//        }
-
+        Log.d("--DS http request:   ", requestStr);
 
         final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET,
                 requestStr, null, new Response.Listener<JSONObject>() {
@@ -95,10 +86,10 @@ public class WeatherSrv {
                        // textView.setText("Response: " + response.toString());
                         DarkSkyForecast result = processData(response);
                         if (result == null) {
-                            Log.d(TAG, "DarkSkyForecast == null" );
+//                            Log.d(TAG, "DarkSkyForecast == null" );
                             completion.completionError("Invalid JSON from server");
                         }else{
-                            Log.d(TAG, "DarkSkyForecast ok" );
+                            Log.d(TAG, "DarkSkyForecast response ok" );
                             completion.completionOk(result);
                         }
 
@@ -107,9 +98,7 @@ public class WeatherSrv {
 
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        // TODO: Handle error
                         Log.e(TAG, error.toString());
-                        Log.d(TAG, "onResponse ERROR" );
                         completion.completionError("onResponse ERROR");
 
                     }
@@ -167,7 +156,7 @@ public class WeatherSrv {
             }
 
 
-            Log.d(TAG, currently.toString().replace(",", "\n"));
+//            Log.d(TAG, currently.toString().replace(",", "\n"));
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -177,7 +166,7 @@ public class WeatherSrv {
 
     }
 
-
+//TODO: move to DS api specific class
     public DarkSkyForecast.Condition evaluateCondition(
             double probability, double temp, double intensity, double accumulation,
             double cover, DarkSkyForecast.DSIcons apiIcon, UnitsHelper.UnitSystems unitSystem) {

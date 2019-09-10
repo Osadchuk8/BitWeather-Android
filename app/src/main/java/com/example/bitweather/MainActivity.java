@@ -3,11 +3,15 @@ package com.example.bitweather;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.location.LocationManager;
+import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,10 +19,13 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -29,19 +36,24 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.SimpleTimeZone;
 import java.util.TimeZone;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import static com.example.bitweather.AppShared.unitSys;
+import static com.example.bitweather.UnitsHelper.UnitSystems.ca;
 
 public class MainActivity extends AppCompatActivity {
 
     private LinearLayout rootLinearLayout;
 
-    private String TAG = "---";
+    private String TAG = "--main--";
     private LinearLayout layout24h;
     private LinearLayout layout6d1;
     private LinearLayout layout6d2;
+
+    ProgressBar progressWheel;
+    View coverView;
+    ImageButton btnGps;
 
     //Current
     private LinearLayout layoutCurrentConditions;
@@ -53,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvTempLow;
     private ImageView ivCurrentIcon;
     private ImageButton btnOptions;
+    private Button btnCloseOptions;
 
     //Details
     private TextView tvDetailSummary;
@@ -66,179 +79,192 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvDetailSunrise;
     private TextView tvDetailSunset;
 
+    private LinearLayout llMenuOptions;
+    private List<Button> segmentedControlBtns = new ArrayList(3);
+    private Button btnAuto;
+    private Button btnC;
+    private Button btnF;
+
     private LocationService locationSrv;
     private WeatherSrv weatherSrv;
-    //private UnitsHelper.UnitSystems unitSys = UnitsHelper.UnitSystems.ca;
+    private UnitsHelper.UnitSystems currentSys = UnitsHelper.UnitSystems.ca;
     private UnitsHelper.UnitsStrings2 unitStrings;
-    private Location currentLocation;
+//    private Location currentLocation;
     private static final int permissionCode = 802;
     private Boolean isDark = false;
+
+    private Boolean isPermissionsOk = false;
+    private String locationProvider ="";
+    private SharedPreferences prefs;
+
+    Timer requestTimer;
+    final int DELAY = 300;  //seconds
 
     //private DarkSkyForecast forecast;
 
 
+    //TODO: Add progress indicator
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        doLayoutInit();
 
+        this.locationSrv = LocationService.getInstance(this);
+        this.weatherSrv = WeatherSrv.getInstance();
+        AppShared.needsRefresh = true;
+        //prefs = this.getSharedPreferences("com.example.bitweather", Context.MODE_PRIVATE);
+        this.prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
-        //LAYOUT INIT >>>
+        readPreferences();
+        checkPermissions();
 
-        rootLinearLayout = findViewById(R.id.rootLinearLayout);
+    }
 
-        btnToggleDetails = findViewById(R.id.btn_toggle_details);
-        layoutDetails = findViewById(R.id.ll_details);
-        layoutDetails.setVisibility(View.GONE);
+    private void readPreferences() {
+        if (prefs == null ) {return;}
+        Log.d(TAG, prefs.toString());
+        String unitStr = prefs.getString("UNIT", "");
+        if (unitStr.length()>0){
+            switch(unitStr){
+                case "AUTO":
+                    AppShared.unitSys = null;
+                    btnAuto.performClick();
+                    Log.d(TAG, "clicked btnAuto");
+                    break;
+                case "CA":
+                    AppShared.unitSys = UnitsHelper.UnitSystems.ca;
+                    btnC.performClick();
+                    Log.d(TAG, "clicked btnC");
+                    break;
+                case "US":
+                    AppShared.unitSys = UnitsHelper.UnitSystems.us;
+                    btnF.performClick();
+                    Log.d(TAG, "clicked btnF");
+                    break;
+            }
+            // TODO: else{} : check if Appshared.unitSys has to be set to null
 
-        layout24h = findViewById(R.id.ll_24h);
-        layout6d1 = findViewById(R.id.ll_6day1);
-        layout6d2 = findViewById(R.id.ll_6day2);
+        }
+    }
 
-        addTreeObserver(layout24h);
-
-        for (int i=1; i<=4; i++){
-            View v = getLayoutInflater().inflate(R.layout.view_24h, (ViewGroup)layout24h, false);
-           // v.setTag("v24h_"+i); //views in their container can be identified by order, so no need in tags.
-            layout24h.addView(v);
+    private void savePreferences() {
+        if (prefs == null ) {return;}
+        String unitStr = "";
+        if (AppShared.unitSys != null){
+            switch(AppShared.unitSys){
+                case ca:
+                    unitStr = "CA";
+                    break;
+                case us:
+                    unitStr = "US";
+                    break;
+            }
+        }else{
+            unitStr = "AUTO";
         }
 
-        for (int i=1; i<=3; i++){
-            View v = getLayoutInflater().inflate(R.layout.view_6d, (ViewGroup)layout6d1, false);
-            layout6d1.addView(v);
+        Log.d(TAG, "savePreferences(): unitStr=" + unitStr + "  .currentSys= " + AppShared.unitSys);
+        prefs.edit().putString("UNIT", unitStr).apply();
+    }
+
+    private void checkPermissions(){
+
+        LocationManager locationManager = locationSrv.getLocationManager();
+
+        if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            locationProvider = LocationManager.NETWORK_PROVIDER;
+        }else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)){
+            locationProvider = LocationManager.GPS_PROVIDER;
+        }else {
+            //no provider available, ask user to turn on Location services in the settings
+            this.isPermissionsOk = false;
+            android.app.AlertDialog.Builder b = new android.app.AlertDialog.Builder(this, R.style.AlertDialogStyle);
+            b.setMessage("Location services seems to be disabled. Please, check the settings.");
+            b.setPositiveButton("OK", null);
+            b.show();
+
         }
+        Log.d(TAG, "locationProvider: " + locationProvider);
 
-        for (int i=1; i<=3; i++){
-            View v = getLayoutInflater().inflate(R.layout.view_6d, (ViewGroup)layout6d2, false);
-            layout6d2.addView(v);
-        }
+        if (    ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                        PackageManager.PERMISSION_GRANTED) {
 
+            this.isPermissionsOk = true;
 
-
-        //CURRENTLY
-        tvCityName = findViewById(R.id.tv_current_city);
-        tvCurrentTemp = findViewById(R.id.tv_current_temp);
-        tvCurrentDescription = findViewById(R.id.tv_current_description);
-        tvCurrentFeelsLike = findViewById(R.id.tv_current_feels);
-        tvTempHigh = findViewById(R.id.tv_current_tmp_high);
-        tvTempLow = findViewById(R.id.tv_current_tmp_low);
-        ivCurrentIcon = findViewById(R.id.iv_currently_icon);
-
-
-        //details
-        tvDetailSummary = findViewById(R.id.tv_detail_summary);
-
-        tvDetailWind = findViewById(R.id.tv_wind);
-        tvDetailHumidity = findViewById(R.id.tv_humidity);
-        tvDetailVisibility = findViewById(R.id.tv_visibility);
-        tvDetailPressure = findViewById(R.id.tv_pressure);
-        tvDetailSunrise = findViewById(R.id.tv_sunrise2);
-        tvDetailSunset = findViewById(R.id.tv_sunset2);
-
-
-
-        LinearLayout llMenuOptions = findViewById(R.id.ll_menu_options);
-        llMenuOptions.setVisibility(View.GONE);
-
-        btnOptions = findViewById(R.id.btn_options);
-        btnOptions.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "btnSearch onClick()");
-                llMenuOptions.setVisibility(View.VISIBLE);
-
-                // comment ' android:animateLayoutChanges="true" ' in layout root node before manual anim
-                // manual anumation:
-                //llMenuOptions.animate().translationY(llMenuOptions.getHeight());
-                //
-
-                //toggle options
-
-            }
-        });
-
-
-        Button btnCloseOptions = findViewById(R.id.btn_close_options);
-        btnCloseOptions.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                llMenuOptions.setVisibility(View.GONE);
-            }
-        });
-
-
-        ImageButton btnSearch = findViewById(R.id.btn_search);
-        btnSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(TAG, "btnSearch onClick()");
-                Intent i = new Intent(MainActivity.this, SearchActivity.class);
-                v.getContext().startActivity(i);
-            }
-        });
-
-        ImageButton btnGps = findViewById(R.id.btn_gps);
-        btnGps.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v){
-                Log.d(TAG, "btnGps onClick()");
-                requestGpsWeather();
-
-            }
-
-        });
-
-        //LAYOUT INIT END
-
-
-        //Location permissions
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            //CHECK request code (int)
+        }else{
+            //no permissions granted, inform user
+            Log.d(TAG, "requesting permissions");
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},permissionCode);
         }
-
-        //setUnits();
-        this.locationSrv = LocationService.getInstance(this);
-        weatherSrv = WeatherSrv.getInstance();
-
-        AppShared.needsRefresh = true;
-        //startWeatherSequence();
-    // onCreate END <<<
     }
 
 
-    //TODO: add timer repeated request
-    private void startWeatherSequence(){
-        requestWeather();
-    };
+
+    //TODO: check Timer instatiation after onpause()
+    // NOTE:  requestWeather() and all sequential in BG Thread, switch to main for ui update
+    private void startTimedSequence(){
+
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                requestWeather();
+                Log.d("---timestamp: ", UnitsHelper.timeStampFrom(System.currentTimeMillis()));
+                Log.d(TAG, "---timer task fired");
+            }
+        };
+
+        // timer tasks run in bg thread: need ui thread for ui updates
+        requestTimer = new Timer();
+        requestTimer.scheduleAtFixedRate(task, 1L, DELAY*1000L);
+
+    }
 
     protected void onResume(){
         super.onResume();
-        Log.d(TAG, "onResume");
+        Log.d(TAG, "---onResume,  isUI thread? : " + String.valueOf(Looper.myLooper()==Looper.getMainLooper()));
+        //TODO: add FADE-in visibility change effect for the cover view transitions
         setUnits();
-        startWeatherSequence();
+
+        if(isPermissionsOk) {
+            startTimedSequence();
+        }else{
+            checkPermissions();
+        }
+
+    }
+
+    protected void onPause(){
+        if(requestTimer!=null){
+            requestTimer.cancel();
+        }
+        savePreferences();
+        super.onPause();
     }
 
     private void setUnits(){
+        //Provided by Appshared.unitSys:
+
         if(AppShared.unitSys != null){
-            // already set
-            Log.d(TAG, "AppShared.unitSys: " + AppShared.unitSys.toString());
+            //Value defined as .ca or .us
+           // Log.d(TAG, "AppShared.currentSys: " + AppShared.currentSys.toString());
+            this.currentSys = AppShared.unitSys;
         }else{
+            //Means "auto", autodetect each time.
             String countryCode = Locale.getDefault().getCountry().toLowerCase();
-            Log.d(TAG, "countryCode = " + countryCode);
+           // Log.d(TAG, "countryCode = " + countryCode);
             if (countryCode.contains("us")){
-                AppShared.unitSys = UnitsHelper.UnitSystems.us;
+                this.currentSys = UnitsHelper.UnitSystems.us;
             }else{
-                AppShared.unitSys = UnitsHelper.UnitSystems.ca;
+                this.currentSys = ca;
             }
         }
 
-        //TODO: remove debug!! >>
-        AppShared.unitSys = UnitsHelper.UnitSystems.ca;
-        //<<
 
-        this.unitStrings = UnitsHelper.initStrings(AppShared.unitSys);
+        this.unitStrings = UnitsHelper.initStrings(this.currentSys);
     }
 
     private void requestGpsWeather(){
@@ -247,66 +273,148 @@ public class MainActivity extends AppCompatActivity {
         requestWeather();
     }
 
+
+
+
+    //TODO: flatten request structure
     private void requestWeather(){
 
+        //TODO: bg thread nesting when called from timer(), check if need to flatten
+        Thread thread = new Thread(){
+            public void run(){
+
+                //network check
+                ConnectivityHelper.isOnline(new CompletionString() {
+                    @Override
+                    public void completionStringOk(String okMsg) {
+
+                        MainActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() { progressWheel.setVisibility(View.VISIBLE); }
+                        });
+                        //network ok, proceed requests
+                        performRequests();
+                    }
+
+                    @Override
+                    public void completionStringError(String error) {
+
+                        MainActivity.this.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                //alert user, not network
+                                AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogStyle);
+                                dialog.setMessage(""+error);
+                                dialog.setPositiveButton("OK",null);
+                                //dialog.setNeutralButton("neutral", null);
+                                dialog.show();
+                            }
+                        });
+                    }
+                });
+
+            }
+        };
+        thread.start();
+
+    }
+
+
+
+    private void performRequests(){
+        Log.d(TAG, "performRequests().. isUI thread? : " + String.valueOf(Looper.myLooper()==Looper.getMainLooper()));
+
+
+
         if (AppShared.needsGpsWeather){
-            //local weather
-            AppShared.location = locationSrv.getGPSLocation();
-            if (AppShared.location == null){return;}
-            AppShared.isGps = true;
-
-            locationSrv.getCityFromCurrentLocation(new CompletionGeoAddress() {
+            locationSrv.getLocation(new CompletionGeoLocation() {
                 @Override
-                public void completionGeocoderOk(String string) {
-                    MainActivity.this.runOnUiThread(new Runnable() {
+                public void completionLocationOk(Location location) {
+                    AppShared.location = location;
+                    AppShared.isGps = true;
+
+                    doWeatherRequest();
+
+                    locationSrv.getCityFromLocation(AppShared.location, new CompletionString() {
                         @Override
-                        public void run() {
-                            Log.d(TAG, string);
-                            tvCityName.setText(string);
+                        public void completionStringOk(String string) {
+                            MainActivity.this.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+//                            Log.d(TAG, string);
+                                    tvCityName.setText(string);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void completionStringError(String error) {
+                            Log.d(TAG, error);
                         }
                     });
                 }
+
                 @Override
-                public void completionGeocoderError(String error) {
-                    Log.d(TAG, error);
+                public void completionLocationError(String error) {
+                    Log.d(TAG, "completionLocationError");
+                    return;
                 }
-            });
+            },
+              //      locationProvider
+                    locationSrv.getLocationManager().NETWORK_PROVIDER
+            );
+
+
+
         }else{ //non-local
-            locationSrv.getCityFromLocation(AppShared.location, new CompletionGeoAddress() {
+            doWeatherRequest();
+            locationSrv.getCityFromLocation(AppShared.location, new CompletionString() {
                 @Override
-                public void completionGeocoderOk(String string) {
+                public void completionStringOk(String string) {
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Log.d(TAG, string);
+//                            Log.d(TAG, string);
                             tvCityName.setText(string);
                         }
                     });
                 }
 
                 @Override
-                public void completionGeocoderError(String error) {
+                public void completionStringError(String error) {
                     Log.d(TAG, error);
                 }
             });
         }
 
 
-        weatherSrv.requestWeather(this, unitSys, AppShared.location, new CompletionForecast() {
+
+
+    }
+
+    private void doWeatherRequest() {
+        weatherSrv.requestWeather(this, currentSys, AppShared.location, new CompletionForecast() {
             @Override
             public void completionOk(DarkSkyForecast forecast) {
-                displayWeather(forecast);
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        displayWeather(forecast);
+                    }
+                });
             }
 
             @Override
             public void completionError(String errorMessage) {
-                GfxHelper.displayToast(getContext(), errorMessage);
-
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        GfxHelper.displayToast(getContext(), errorMessage);
+                    }
+                });
             }
         });
-
     }
-
 
 
     @Override
@@ -334,13 +442,9 @@ public class MainActivity extends AppCompatActivity {
             AppShared.zone = forecast.zone;
         }
 
-
-
-
         tvCurrentDescription.setText(currently.summary);
         tvCurrentTemp.setText( weatherSrv.formatTemperatureString(currently.temperature, unitStrings.tempStr) );
-
-        tvCurrentFeelsLike.setText(weatherSrv.formatTemperatureString(currently.apparentTemperature, ""));
+        tvCurrentFeelsLike.setText("feels like " + weatherSrv.formatTemperatureString(currently.apparentTemperature, ""));
         //weather icon: getting id value from DS icon
 
         String idString = "cond_" + currently.dsIcon.toString();
@@ -365,13 +469,10 @@ public class MainActivity extends AppCompatActivity {
 
         if(daily.size() < 1  || daily==null ) {return;}
 
-        Log.d("DAILY[0]", daily.get(0).toString() );
+//        Log.d("DAILY[0]", daily.get(0).toString() );
 
         int sr = daily.get(0).sunriseTime;
         int ss = daily.get(0).sunsetTime;
-        Log.d(TAG, "unix: sr/ss: "+sr+"/"+ss);
-        Log.d("date sr", UnitsHelper.dateFull(sr));
-        Log.d("date ss", UnitsHelper.dateFull(ss));
 
         if (AppShared.isGps == false && AppShared.zone != null){
             tvDetailSunrise.setText(UnitsHelper.hourMinutesNonLocalFrom(sr, AppShared.zone));
@@ -399,7 +500,6 @@ public class MainActivity extends AppCompatActivity {
 
         this.rootLinearLayout.setBackground(getResources().getDrawable(bgId));
 
-        Log.d("daily \n" , daily.toString());
         int currentTempHigh = (int) daily.get(0).temperatureHigh;
         int currentTempLow = (int) daily.get(0).temperatureLow;
         tvTempHigh.setText("▲ " + DarkSkyForecast.formatTemperatureString(daily.get(0).temperatureHigh, "") );
@@ -428,7 +528,6 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i<=5; i++){
 
             View v = views.get(i);
-            Log.d(TAG, "v6d: " + v);
             //((View6d) v).setChildViews(v);
             DarkSkyForecast.Daily day = daily.get(i+1);
 
@@ -444,7 +543,7 @@ public class MainActivity extends AppCompatActivity {
             String wind = "" + UnitsHelper.convDegreesToCardinal(day.windBearing)
                     + String.format("%.0f", day.windSpeed) + unitStrings.speedStr;
             DarkSkyForecast.Condition condition = weatherSrv.evaluateCondition(day.cloudCover, day.temperatureHigh,
-                    day.precipIntensityMax, day.precipAccumulation, day.cloudCover, day.dsIcon, unitSys);
+                    day.precipIntensityMax, day.precipAccumulation, day.cloudCover, day.dsIcon, currentSys);
 
             this.displayEvaluatedCondition(false, condition, day.precipProbability, day.precipIntensityMax,
                     day.precipAccumulation, wind, ivIcon, tvPrecip );
@@ -544,7 +643,7 @@ public class MainActivity extends AppCompatActivity {
 
             String wind = UnitsHelper.convDegreesToCardinal(mBearing) + String.format("%.0f", mSpeed);
             DarkSkyForecast.Condition condition = weatherSrv.evaluateCondition(mProbability, mTemp, mIntensity, accumulation,
-                    mCover, hourly.get(iFirst).dsIcon, unitSys);
+                    mCover, hourly.get(iFirst).dsIcon, currentSys);
 
             displayEvaluatedCondition(isDark, condition, mProbability, mIntensity,
                     accumulation, wind, iconView, tvPrecip);
@@ -566,7 +665,7 @@ public class MainActivity extends AppCompatActivity {
                     value = accumulation;
                 }
 
-                double maxValue = (unitSys == UnitsHelper.UnitSystems.us) ? 8.0 : 20.0;
+                double maxValue = (currentSys == UnitsHelper.UnitSystems.us) ? 8.0 : 20.0;
                 double level = (value + 1 < maxValue) ? (value / maxValue + 0.1) : 1;
 
                 int h = (int) (levelView.getMeasuredHeight() * level);
@@ -585,8 +684,6 @@ public class MainActivity extends AppCompatActivity {
                 levelView.setGravity(Gravity.BOTTOM);
                 levelView.addView(ll);
 
-                Log.d("--- LL", ll.toString());
-
             }
 
         }
@@ -594,7 +691,22 @@ public class MainActivity extends AppCompatActivity {
 
     public void displayWeather(DarkSkyForecast forecast){
 
-        //CURRENTLY
+        coverView.animate().alpha(0.1f).setDuration(1000).withEndAction(new Runnable() {
+            @Override
+            public void run() {
+                coverView.setVisibility(View.INVISIBLE);
+            }
+        });
+        progressWheel.setVisibility(View.INVISIBLE);
+
+
+        if(AppShared.isGps){
+            btnGps.setVisibility(View.INVISIBLE);
+            btnGps.setEnabled(false);
+        }else{
+            btnGps.setVisibility(View.VISIBLE);
+            btnGps.setEnabled(true);
+        }
         displayCurrently(forecast);
         displayBgImageSetTemp(forecast);
         display24hSection(forecast);
@@ -651,29 +763,164 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        // UI Tweaks to be called after Activity layout job is done.
-    private void addTreeObserver(final View view) {
 
-        ViewTreeObserver vto = view.getViewTreeObserver();
-        vto.addOnGlobalLayoutListener (new ViewTreeObserver.OnGlobalLayoutListener() {
+
+    // UI setup
+    private void doLayoutInit() {
+        //LAYOUT INIT >>>
+
+        rootLinearLayout = findViewById(R.id.rootLinearLayout);
+
+        btnToggleDetails = findViewById(R.id.btn_toggle_details);
+        layoutDetails = findViewById(R.id.ll_details);
+        layoutDetails.setVisibility(View.GONE);
+
+        layout24h = findViewById(R.id.ll_24h);
+        layout6d1 = findViewById(R.id.ll_6day1);
+        layout6d2 = findViewById(R.id.ll_6day2);
+
+        addTreeObserver(layout24h);
+
+        for (int i=1; i<=4; i++){
+            View v = getLayoutInflater().inflate(R.layout.view_24h, (ViewGroup)layout24h, false);
+            // v.setTag("v24h_"+i); //views in their container can be identified by order, so no need in tags.
+            layout24h.addView(v);
+        }
+
+        for (int i=1; i<=3; i++){
+            View v = getLayoutInflater().inflate(R.layout.view_6d, (ViewGroup)layout6d1, false);
+            layout6d1.addView(v);
+        }
+
+        for (int i=1; i<=3; i++){
+            View v = getLayoutInflater().inflate(R.layout.view_6d, (ViewGroup)layout6d2, false);
+            layout6d2.addView(v);
+        }
+
+
+        //CURRENTLY
+        tvCityName = findViewById(R.id.tv_current_city);
+        tvCurrentTemp = findViewById(R.id.tv_current_temp);
+        tvCurrentDescription = findViewById(R.id.tv_current_description);
+        tvCurrentFeelsLike = findViewById(R.id.tv_current_feels);
+        tvTempHigh = findViewById(R.id.tv_current_tmp_high);
+        tvTempLow = findViewById(R.id.tv_current_tmp_low);
+        ivCurrentIcon = findViewById(R.id.iv_currently_icon);
+
+
+        //details
+        tvDetailSummary = findViewById(R.id.tv_detail_summary);
+
+        tvDetailWind = findViewById(R.id.tv_wind);
+        tvDetailHumidity = findViewById(R.id.tv_humidity);
+        tvDetailVisibility = findViewById(R.id.tv_visibility);
+        tvDetailPressure = findViewById(R.id.tv_pressure);
+        tvDetailSunrise = findViewById(R.id.tv_sunrise2);
+        tvDetailSunset = findViewById(R.id.tv_sunset2);
+
+
+        final Animation animSlideUp = AnimationUtils.loadAnimation(this, R.anim.slide_up);
+        final Animation animSlideDown = AnimationUtils.loadAnimation(this, R.anim.slide_down);
+
+
+        ImageButton btnSearch = findViewById(R.id.btn_search);
+        btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onGlobalLayout() {
-                view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-
-                // DO POST LAYOUT JOB
-
-                adjustInflatedViews();
-                updateInflatedDispaly();
-
-
+            public void onClick(View v) {
+                Intent i = new Intent(MainActivity.this, SearchActivity.class);
+                v.getContext().startActivity(i);
             }
         });
 
+        btnGps = findViewById(R.id.btn_gps);
+        btnGps.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v){
+                requestGpsWeather();
+
+            }
+
+        });
+
+
+        llMenuOptions = findViewById(R.id.ll_menu_options);
+        //llMenuOptions.setVisibility(View.GONE);
+
+        btnOptions = findViewById(R.id.btn_options);
+        btnOptions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // commented ' android:animateLayoutChanges="true" ' in layout root node , using manual animation
+                llMenuOptions.animate().y(MainActivity.this.getWindow().getDecorView().getBottom() - llMenuOptions.getHeight());
+            }
+        });
+
+        btnCloseOptions = findViewById(R.id.btn_close_options);
+        btnCloseOptions.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                llMenuOptions.animate().y(MainActivity.this.getWindow().getDecorView().getBottom());
+                if(AppShared.needsRefresh){
+                    setUnits();
+                    requestWeather();
+                }
+            }
+        });
+
+        btnAuto = findViewById(R.id.btn_select_auto);
+        btnC = findViewById(R.id.btn_select_C);
+        btnF = findViewById(R.id.btn_select_F);
+        segmentedControlBtns.add(btnAuto);
+        segmentedControlBtns.add(btnF);
+        segmentedControlBtns.add(btnC);
+
+        for(Button b : segmentedControlBtns){
+            b.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //first all btns white bg
+                    for(Button b : segmentedControlBtns){
+                        b.setBackground(getResources().getDrawable(R.drawable.bg_button_blueborder));
+                        b.setTextColor(getResources().getColor(R.color.bluetint));
+                    }
+
+                    Button vv = (Button) v;
+                    vv.setBackground(getResources().getDrawable(R.drawable.bg_button_whiteborder));
+                    vv.setTextColor(getResources().getColor(R.color.snowColor));
+
+                    switch(b.getId()){
+                        case R.id.btn_select_auto:
+                            if (AppShared.unitSys != null ){
+                                AppShared.unitSys = null;
+                                AppShared.needsRefresh = true;
+                            }
+                            break;
+                        case R.id.btn_select_F:
+                            if (AppShared.unitSys != UnitsHelper.UnitSystems.us){
+                                AppShared.unitSys = UnitsHelper.UnitSystems.us;
+                                AppShared.needsRefresh = true;
+                            }
+                            break;
+                        case R.id.btn_select_C:
+                            if (AppShared.unitSys != UnitsHelper.UnitSystems.ca){
+                                AppShared.unitSys = UnitsHelper.UnitSystems.ca;
+                                AppShared.needsRefresh = true;
+                            }
+                            break;
+                    }
+                    //if .needsRefresh==true, state was changed -> refresh on click menu close
+                }
+            });
+
+        }
+
+        //start with layout covered till data refresh
+        coverView = findViewById(R.id.cover_view);
+        coverView.setVisibility(View.VISIBLE);
+        progressWheel = findViewById(R.id.progress_indicator);
+
+        //LAYOUT INIT END
     }
 
-
-
-    // UI Tweaks
     private void adjustInflatedViews() {
 
         //reference height: scrollview * 30%
@@ -681,7 +928,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout llScrollContainer = findViewById(R.id.ll_scroll_container);
         int scrollViewHeight = sv.getHeight();
         int scrollViewWidth = sv.getWidth();
-        Log.d(TAG, "refHeight= " + scrollViewHeight );
+       // Log.d(TAG, "refHeight= " + scrollViewHeight );
 
 
         //det details layout
@@ -691,7 +938,7 @@ public class MainActivity extends AppCompatActivity {
         //DEBUG
         int widthLayout24h = layout24h.getWidth();
         int heightLayout24h = layout24h.getHeight();
-        Log.d(TAG, "widthLayout24h: " + widthLayout24h + " :: heightLayout24h: " + heightLayout24h );
+       // Log.d(TAG, "widthLayout24h: " + widthLayout24h + " :: heightLayout24h: " + heightLayout24h );
         // END DEBUG
 
 
@@ -727,25 +974,14 @@ public class MainActivity extends AppCompatActivity {
                 v2.setBackgroundColor(getResources().getColor(R.color.colorAlphaGrey10));
             }
             v2.setLayoutParams(lllp2);
-
         }
 
-
-//        LinearLayout.LayoutParams llps = new LinearLayout.LayoutParams(sv.getLayoutParams());
-//        llps.height = scrollViewHeight;
-//        llScrollContainer.setLayoutParams(llps);
-//        llScrollContainer.setLayoutParams(llps);
-
-
+        //hide settings menu
+        llMenuOptions.animate().y(this.getWindow().getDecorView().getBottom());
 
     }
 
-    private void updateInflatedDispaly() {
-
-    }
-
-
-
+    private void updateInflatedDispaly() { }
 
 
     public void onClickBtnDetails(View view){
@@ -763,7 +999,22 @@ public class MainActivity extends AppCompatActivity {
         return this;
     }
 
+    // UI Tweaks to be called after Activity layout job is done.
+    private void addTreeObserver(final View view) {
 
+        ViewTreeObserver vto = view.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener (new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
+                // DO POST LAYOUT JOB
+                adjustInflatedViews();
+                updateInflatedDispaly();
+            }
+        });
+
+    }
 
     // <<<<<<<<<<<
     //ACTIVITY END

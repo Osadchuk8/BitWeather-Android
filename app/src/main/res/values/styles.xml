@@ -12,6 +12,15 @@
         <item name="colorControlNormal">@color/snowColor</item>
         <item name="textAppearanceListItem">@color/snowColor</item>
         <item name="actionModeWebSearchDrawable">@drawable/btn_magnify</item>
-</style>"
+    </style>"
+
+    <style name="AlertDialogStyle" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:textColor">#f3f3f3</item>
+        <item name="android:textColorPrimary">#f3f3f3</item>
+        <item name="android:background">@color/colorPrimaryDark</item>
+    </style>
+
+
+
 
 </resources>

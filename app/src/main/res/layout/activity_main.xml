@@ -5,8 +5,9 @@
     android:id="@+id/main_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:animateLayoutChanges="true"
     tools:context=".MainActivity">
+
+    <!--android:animateLayoutChanges="true"-->
 
     <!--
     <ImageView
@@ -28,6 +29,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="0dp"
+        android:layout_marginTop="8dp"
         android:background="@drawable/bg_cloudy_day"
         android:orientation="vertical"
         android:padding="10dp"
@@ -166,7 +168,7 @@
                         android:layout_weight="1"
                         android:gravity="center"
                         android:paddingLeft="20sp"
-                        android:textAlignment="viewStart"
+                        android:textAlignment="textStart"
                         android:textColor="@android:color/white"
                         android:textSize="24sp" />
 
@@ -406,6 +408,7 @@
                             android:text="sunrise:"
                             android:textAlignment="textEnd"
                             android:textColor="@android:color/white"
+                            android:textSize="14sp"
                             app:autoSizeMaxTextSize="100sp"
                             app:autoSizeMinTextSize="6sp"
                             app:autoSizeStepGranularity="2sp"
@@ -419,6 +422,7 @@
                             android:paddingLeft="10sp"
                             android:textAlignment="viewStart"
                             android:textColor="@android:color/white"
+                            android:textSize="14sp"
                             app:autoSizeMaxTextSize="100sp"
                             app:autoSizeMinTextSize="6sp"
                             app:autoSizeStepGranularity="2sp"
@@ -432,6 +436,7 @@
                             android:text="sunset:"
                             android:textAlignment="textEnd"
                             android:textColor="@android:color/white"
+                            android:textSize="14sp"
                             app:autoSizeMaxTextSize="100sp"
                             app:autoSizeMinTextSize="6sp"
                             app:autoSizeStepGranularity="2sp"
@@ -445,6 +450,7 @@
                             android:paddingLeft="10sp"
                             android:textAlignment="viewStart"
                             android:textColor="@android:color/white"
+                            android:textSize="14sp"
                             app:autoSizeMaxTextSize="100sp"
                             app:autoSizeMinTextSize="6sp"
                             app:autoSizeStepGranularity="2sp"
@@ -533,32 +539,141 @@
 
     <LinearLayout
         android:id="@+id/ll_menu_options"
-        android:layout_width="363dp"
-        android:layout_height="589dp"
+        android:layout_width="0dp"
+        android:layout_height="250dp"
         android:layout_marginStart="10dp"
-        android:layout_marginTop="731dp"
         android:layout_marginEnd="10dp"
-        android:background="@color/honey"
+        android:background="@color/colorPrimary"
+        android:clipChildren="true"
+        android:clipToPadding="true"
         android:orientation="vertical"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/rootLinearLayout">
+        app:layout_constraintStart_toStartOf="parent">
 
-        <Button
-            android:id="@+id/btn_close_options"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:text="X"
-            android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
-
-        <ImageView
-            android:id="@+id/imageView2"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:srcCompat="@drawable/cond_cloudy" />
+            android:layout_weight="1"
+            android:gravity="center|end"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textView4"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:gravity="start"
+                android:textAlignment="center"
+                android:textColor="@color/snowColor" />
+
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="bottom|center_horizontal"
+                android:text="Units:"
+                android:textAlignment="center"
+                android:textColor="@color/snowColor" />
+
+            <Button
+                android:id="@+id/btn_close_options"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:adjustViewBounds="false"
+                android:background="@android:color/transparent"
+                android:cropToPadding="false"
+                android:text="✕"
+                android:textColor="@color/snowColor"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:tint="@color/snowColor" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="200dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/bg_blue_stroke_rounded"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_select_auto"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="0dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_whiteborder"
+                android:padding="0dp"
+                android:text="auto"
+                android:textColor="@color/snowColor" />
+
+            <Button
+                android:id="@+id/btn_select_F"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_blueborder"
+                android:text="ºF"
+                android:textColor="@color/bluetint" />
+
+            <Button
+                android:id="@+id/btn_select_C"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_button_blueborder"
+                android:text="ºC"
+                android:textColor="@color/bluetint" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="3"
+            android:gravity="center"
+            android:text="BitWeather v1.1"
+            android:textAlignment="center"
+            android:textColor="@color/snowColor" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="3" />
+
     </LinearLayout>
+
+
+    <View
+        android:id="@+id/cover_view"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="4dp"
+        android:layout_marginBottom="4dp"
+        android:alpha="0.8"
+        android:background="@color/colorPrimary"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/ll_menu_options"
+        app:layout_constraintEnd_toEndOf="@+id/rootLinearLayout"
+        app:layout_constraintStart_toStartOf="@+id/rootLinearLayout"
+        app:layout_constraintTop_toTopOf="@+id/rootLinearLayout" />
+
+    <ProgressBar
+        android:id="@+id/progress_indicator"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

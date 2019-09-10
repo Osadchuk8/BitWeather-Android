@@ -2,7 +2,7 @@
 <resources>
     <color name="colorPrimary">#48739E</color>
     <color name="colorPrimaryDark">#47729d</color>
-    <color name="colorAccent">#D81B60</color>
+    <color name="colorAccent">#fefefe</color>
 
     <color name="colorAlphaGrey10">#1A000000</color>
     <color name="colorAlphaGrey20">#33000000</color>
@@ -12,4 +12,6 @@
 
     <color name="honey">#ffdd44</color>
     <color name="clementine">#ff8811</color>
+    <color name="bluetint">#007aff</color>
+
 </resources>

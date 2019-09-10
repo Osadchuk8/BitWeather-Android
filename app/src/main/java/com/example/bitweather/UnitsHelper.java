@@ -38,13 +38,20 @@ public class UnitsHelper {
         return names[re];
     }
 
+    public static String timeStampFrom(long millis){
+        Date date = new Date(millis);
+        SimpleDateFormat sdf = new SimpleDateFormat("H:mm:ss");
+        String str = sdf.format(date);
+        return ""+str;
+    }
+
     public static int hourFrom(int unixTime) {
         int hour = 0;
         //use Calendar for integer values
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis((long) unixTime * 1000);
         hour = calendar.get(Calendar.HOUR_OF_DAY);
-        Log.d("**TIMESTAMP to HOUR:", "stmp: " + unixTime + " hour: " + hour);
+        //Log.d("**TIMESTAMP to HOUR:", "stmp: " + unixTime + " hour: " + hour);
         return hour;
 
     }
@@ -57,19 +64,6 @@ public class UnitsHelper {
         calendar.setTimeInMillis((long) unixTime * 1000);
         calendar.setTimeZone(zone);
         hour = calendar.get(Calendar.HOUR_OF_DAY);
-        Log.d("** HOUR in TZ:", "TZ: " + zone + " hour: " + hour);
-
-        /*
-        Date date = new Date(unixTime*1000);
-        SimpleDateFormat sdf = new SimpleDateFormat("H"); //24hr format
-        sdf.setTimeZone(zone);
-        String str = sdf.format(date);
-        try {
-            hour = Integer.parseInt(str);
-        }catch (NumberFormatException e) {
-            Log.d("Units", "hour conversion exception" + e.getLocalizedMessage());
-        }
-        */
         return hour;
     }
 

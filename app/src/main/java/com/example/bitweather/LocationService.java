@@ -6,28 +6,37 @@ import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Bundle;
+import android.os.Looper;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.widget.Toast;
+
+//import com.google.android.gms.location.LocationServices;
+//import com.google.android.gms.tasks.OnFailureListener;
+//import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-//TODO: add @NONNULL or check services !=null
 public class LocationService {
 
-    private final String TAG = "--location";
+    private final String TAG = "--location--";
+
     private LocationManager locationManager;
     private Geocoder geocoder;
     private Context ctx;
     private static LocationService instance;
+    // private com.google.android.gms.location.FusedLocationProviderClient locationClient;
 
     private LocationService(Context context){
         this.ctx = context;
         geocoder = new Geocoder(ctx, Locale.getDefault());
         locationManager = (LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE);
+//        locationClient = LocationServices.getFusedLocationProviderClient(context);
+
     }
 
     public static LocationService getInstance(Context context){
@@ -37,12 +46,14 @@ public class LocationService {
             return instance;
     }
 
-    // TODO:
-    /*
-    * Move to non-ui thread geocoder query calls
-    * asynctask ...
-     */
 
+    public LocationManager getLocationManager() {
+        return locationManager;
+    }
+
+    public void setLocationManager(LocationManager locationManager) {
+        this.locationManager = locationManager;
+    }
 
   /*
   * Terminology
@@ -50,196 +61,213 @@ public class LocationService {
   * reverseGeocode() : getting address from location coordinates: location2d -> address(cityName)
   */
 
-    //TODO: Permissions procedure: (API >23 needs manual)
-    /*
-    if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-    PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) ==
-    PackageManager.PERMISSION_GRANTED) {
-        googleMap.setMyLocationEnabled(true);
-        googleMap.getUiSettings().setMyLocationButtonEnabled(true);
-    } else {
-        Toast.makeText(this, R.string.error_permission_map, Toast.LENGTH_LONG).show();
+
+
+
+//TODO: remove
+    public void getCityFromCurrentLocation(CompletionString completion){
+
+        //TODO: bg thread -> in activity
+//        Thread thread = new Thread() {
+//            @Override
+//            public void run() {
+//
+//            }
+//        };
+//        thread.start();
+
+
+//        getLocation(new CompletionGeoLocation() {
+//            @Override
+//            public void completionLocationOk(Location loc) {
+//                String city = "";
+//                try{
+//                    if (loc == null ) {return;}
+//                    double lat = loc.getLatitude();
+//                    double lon = loc.getLongitude();
+//                    List <Address> addresses = geocoder.getFromLocation(lat, lon, 1);
+//                    Address firstAddr = addresses.get(0);
+//                    city = firstAddr.getLocality();
+//                    //Log.d(TAG, "getCityFromCurrentLocation() => " + city);
+//                }catch(IOException e){
+//                    e.printStackTrace();
+//                }finally{
+//                    if(city != null){
+//                        completion.completionStringOk(city);
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void completionLocationError(String error) {
+//                Log.i(TAG, "getLocation() error");
+//
+//            }
+//        });
     }
-    */
 
 
-    public String getCityFromCurrentLocation(){
+    public void getCityFromLocation(Location location, CompletionString completion){
+
         String city = "";
-        Location loc = getGPSLocation();
-        if (loc != null ) {
-
+        try{
+            Location loc = location;
+            if (loc == null ) {return;}
             double lat = loc.getLatitude();
             double lon = loc.getLongitude();
+            List <Address> addresses = geocoder.getFromLocation(lat, lon, 1);
+            Address firstAddr = addresses.get(0);
+            city = firstAddr.getLocality();
+            //Log.d(TAG, "getCityFromLocation() => " + city);
 
-            try {
-                List <Address> addresses = geocoder.getFromLocation(lat, lon, 1);
-                Address firstAddr = addresses.get(0);
-                city += firstAddr.getLocality();
-                Log.d(TAG, "getCityFromCurrentLocation() => " + city);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return city;
-    }
-
-
-    public void getCityFromCurrentLocation(CompletionGeoAddress completion){
-
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                String city = "";
-                try{
-                    Location loc = getGPSLocation();
-                    if (loc == null ) {return;}
-                    double lat = loc.getLatitude();
-                    double lon = loc.getLongitude();
-                    List <Address> addresses = geocoder.getFromLocation(lat, lon, 1);
-                    Address firstAddr = addresses.get(0);
-                    city = firstAddr.getLocality();
-                    Log.d(TAG, "getCityFromCurrentLocation() => " + city);
-
-                }catch(IOException e){
-                    e.printStackTrace();
-                }finally{
-                    if(city != null){
-                        completion.completionGeocoderOk(city);
-                    }
-                }
-            }
-        };
-        thread.start();
-    }
-
-
-    public void getCityFromLocation(Location location, CompletionGeoAddress completion){
-
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                String city = "";
-                try{
-                    Location loc = location;
-                    if (loc == null ) {return;}
-                    double lat = loc.getLatitude();
-                    double lon = loc.getLongitude();
-                    List <Address> addresses = geocoder.getFromLocation(lat, lon, 1);
-                    Address firstAddr = addresses.get(0);
-                    city = firstAddr.getLocality();
-                    Log.d(TAG, "getCityFromLocation() => " + city);
-
-                }catch(IOException e){
-                    e.printStackTrace();
-                }finally{
-                    if(city != null){
-                        completion.completionGeocoderOk(city);
-                    }
-                }
-            }
-        };
-        thread.start();
-    }
-
-    //TODO: run on non-ui thread
-    public Location getLocationFromCityName(String locationName){
-        Location loc = new Location("");
-        try {
-            List<Address> addresses = geocoder.getFromLocationName(locationName, 1);
-            if (addresses.isEmpty()){
-                return loc;
-            }
-            double lat = addresses.get(0).getLatitude();
-            double lon = addresses.get(0).getLongitude();
-            loc.setLatitude(lat);
-            loc.setLongitude(lon);
-
-        } catch (IOException e) {
+        }catch(IOException e){
             e.printStackTrace();
+        }finally{
+            if(city != null){
+                completion.completionStringOk(city);
+            }
         }
-
-        return loc;
 
     }
 
     public void getLocationFromCityName(String locationName, CompletionGeoLocation completion){
 
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                Location location = new Location("");
-                try{
-                    List<Address> addresses = geocoder.getFromLocationName(locationName, 1);
-                    if (addresses.isEmpty()){
-                        return;
-                    }
-                    double lat = addresses.get(0).getLatitude();
-                    double lon = addresses.get(0).getLongitude();
-                    location.setLatitude(lat);
-                    location.setLongitude(lon);
-                    completion.completionGeocoderOk(location);
-
-                }catch(IOException e) {
-                    e.printStackTrace();
-                }
+        Location location = new Location("");
+        try{
+            List<Address> addresses = geocoder.getFromLocationName(locationName, 1);
+            if (addresses.isEmpty()){
+                return;
             }
-        };
-        thread.start();
-    }
+            double lat = addresses.get(0).getLatitude();
+            double lon = addresses.get(0).getLongitude();
+            location.setLatitude(lat);
+            location.setLongitude(lon);
+            completion.completionLocationOk(location);
 
-    public void getAddressFromCityName(String locationName, CompletionGeoAddress completion){
-
-        Thread thread = new Thread() {
-            @Override
-            public void run() {
-                String r = "";
-                try{
-                    List<Address> addresses = geocoder.getFromLocationName(locationName, 1);
-                    if (addresses.isEmpty()){
-                        return;
-                    }
-                    Address addr = addresses.get(0);
-                    Locale lo = addr.getLocale();
-                    r = addr.getLocality() + ", " + addr.getAdminArea() + ", " + addr.getCountryName();
-                    completion.completionGeocoderOk(r);
-
-
-                }catch(IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        thread.start();
-    }
-
-
-
-
-    public Location getGPSLocation() {
-        if (ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(ctx, "Location not available.", Toast.LENGTH_SHORT).show();
-            Log.i(TAG,"COARSE_LOCATION not available");
-            return null;
+        }catch(IOException e) {
+            e.printStackTrace();
         }
-        //FINE_LOCATION not in use (GPS provider only)
-        //Location lastKnownLocationGPS = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-        Location lastKnownLocationPassive = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+    }
 
-        if (lastKnownLocationPassive != null) {
-            Log.d(TAG, "location: "+lastKnownLocationPassive.toString());
-            return lastKnownLocationPassive;
+    public void getAddressFromCityName(String locationName, CompletionString completion){
+
+        String r = "";
+        try{
+            List<Address> addresses = geocoder.getFromLocationName(locationName, 1);
+            if (addresses.isEmpty()){
+                return;
+            }
+            Address addr = addresses.get(0);
+            Locale lo = addr.getLocale();
+            r = addr.getLocality() + ", " + addr.getAdminArea() + ", " + addr.getCountryName();
+            completion.completionStringOk(r);
+
+        }catch(IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    //Not used in the current implementation
+    // build.gradle: uncomment gms play-services-location api for this dependency
+    /*
+    public void getFusedLocation(CompletionGeoLocation completion) {
+        Location l;
+        if ( ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED ||
+             ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED ) {
+            Log.i(TAG, " PackageManager.PERMISSION_GRANTED==FALSE");
+
+             locationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+
+                    if(location!=null){
+                        completion.completionLocationOk(location);
+                    }
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                 @Override
+                 public void onFailure(@NonNull Exception e) {
+                     Log.d(TAG, "getFusedLocation  onFailure()");
+                     e.printStackTrace();
+                 }
+             });
+
+            }
+    }
+    */
+
+
+    //TODO:
+    /*
+    * 1) build PROVIDER LIST
+    * 2) check if providers enabled
+    * 3) check permissions
+    * 4) request permission
+    * 5) use lastKnown or requestLocation if null
+    * */
+
+
+
+
+// Change to completion type
+    //TODO:
+    //split to : initLocation (on service start)
+    //: getLocation (services ok)
+    public void getLocation(CompletionGeoLocation completion, String provider) {
+
+        Location l;
+
+        if (    ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                        PackageManager.PERMISSION_GRANTED) {
+
+            l = locationManager.getLastKnownLocation(provider);
+
+            //Location manager doesn't hold any recent location updates, need to request
+            if (l == null) {
+                //update location
+
+                Log.d(TAG, "requestSingleUpdate");
+
+                locationManager.requestSingleUpdate(provider, new LocationListener() {
+                    @Override
+                    public void onLocationChanged(Location location) {
+                        Log.d(TAG, "onLocationChanged!!");
+                        completion.completionLocationOk(location);
+                    }
+
+                    @Override
+                    public void onStatusChanged(String provider, int status, Bundle extras) {
+                    }
+
+                    @Override
+                    public void onProviderEnabled(String provider) {
+                    }
+
+                    @Override
+                    public void onProviderDisabled(String provider) {
+                    }
+                }, Looper.getMainLooper());
+
+            } else {
+                completion.completionLocationOk(l);
+            }
+
         }else{
-            Log.d(TAG, "location unreachable");
-            return null;
+            //no permissions granted, inform user
+            Log.d(TAG, "requesting permissions");
+            ActivityCompat.requestPermissions((MainActivity) ctx, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
         }
 
 
+
     }
-
-
 
 
 
