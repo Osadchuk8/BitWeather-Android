@@ -20,6 +20,7 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 public class LocationService {
 
@@ -152,16 +153,17 @@ public class LocationService {
 
     public void getAddressFromCityName(String locationName, CompletionString completion){
 
-        String r = "";
         try{
             List<Address> addresses = geocoder.getFromLocationName(locationName, 1);
             if (addresses.isEmpty()){
                 return;
             }
             Address addr = addresses.get(0);
-            Locale lo = addr.getLocale();
-            r = addr.getLocality() + ", " + addr.getAdminArea() + ", " + addr.getCountryName();
-            completion.completionStringOk(r);
+            StringBuilder sb = new StringBuilder();
+            if(null != addr.getLocality()) sb.append(addr.getLocality()+ ", ");
+            if(null != addr.getAdminArea()) sb.append(addr.getAdminArea()+ ", ");
+            if(null != addr.getCountryName()) sb.append(addr.getCountryName());
+            completion.completionStringOk(sb.toString());
 
         }catch(IOException e) {
             e.printStackTrace();

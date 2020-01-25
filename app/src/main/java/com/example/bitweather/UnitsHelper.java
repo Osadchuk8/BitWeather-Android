@@ -1,10 +1,6 @@
 package com.example.bitweather;
 
-import android.util.Log;
-
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -14,8 +10,8 @@ public class UnitsHelper {
 
     public enum UnitSystems {us, ca}
 
-    public static UnitsStrings2 initStrings(UnitsHelper.UnitSystems system){
-        return new UnitsStrings2(system);
+    public static UnitsStrings initStrings(UnitsHelper.UnitSystems system){
+        return new UnitsStrings(system);
     }
 
     public static double convertFarenheit(double temp){
@@ -101,7 +97,7 @@ public class UnitsHelper {
 
 
 
-    public static class UnitsStrings2 {
+    public static class UnitsStrings {
 
         UnitsHelper.UnitSystems sys;
         String tempStr;
@@ -111,7 +107,7 @@ public class UnitsHelper {
         String pressureStr;
         String distanceStr;
 
-        public UnitsStrings2(UnitsHelper.UnitSystems system) {
+        public UnitsStrings(UnitsHelper.UnitSystems system) {
             switch (system) {
                 case us:
                     sys = UnitsHelper.UnitSystems.us;

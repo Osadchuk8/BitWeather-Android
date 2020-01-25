@@ -1,0 +1,41 @@
+XXX  onStart segment control not set to "AUTO"  USE MainActivity.currentSYS -> vs Appashared.unnitsys
+
+ 0) infinite wait on NO LOCATION  -> no redirect to search (use ios path)
+
+XXX  UX review iOS <-> Android
+2) img resources : build prod version
+XXX  HI, LOW temp arrows: font solution ? >> DONE
+4) HDPI: layout_details: adjust font (too small)
+
+
+
+BUG * GLOBAL * (&iOS)
+ 1) Precipitation string evaluation: do single unit calc (should be same condition both .us and .ca)
+ 2) different current condition and current icon (DS api vs evaluator)
+
+
+
+ MOVE BACKLOG HERE!!!
+
+ 1) ONCLICK_GPS_BTN -> check locationEnabled
+
+
+
+// *
+- do not call onPause() if stay visible
+- do not nest public void run()
+
+* //
+
+
+ /**
+         *
+         * flow should start here:
+         *
+         * 1) check inet (if no ) -> stop
+         * 2) check location
+         *      a) ok :: use local weather  (flag locationON)
+         *      b) ko :: switch to ssearch  (flag locationOFF)
+         *
+         *
+         */

@@ -55,17 +55,14 @@ public class SearchActivity extends AppCompatActivity {
             @Override
             public boolean onQueryTextChange(String newText) {
                 handler.removeCallbacksAndMessages(null);
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        //Log.d(TAG, "onQueryTextChange: " + newText);
-                        if (newText.length() < 2){
-                            resultMap.clear();
-                            layoutResults.removeAllViews();
-                        }
-                        if(newText.length() > 2) {
-                            geoCodeCityName(newText);
-                        }
+                handler.postDelayed(() -> {
+                    //Log.d(TAG, "onQueryTextChange: " + newText);
+                    if (newText.length() < 2){
+                        resultMap.clear();
+                        layoutResults.removeAllViews();
+                    }
+                    if(newText.length() > 2) {
+                        geoCodeCityName(newText);
                     }
                 }, 700);
                 return false;
@@ -73,14 +70,11 @@ public class SearchActivity extends AppCompatActivity {
         });
 
 
-        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
-            @Override
-            public boolean onClose() {
-                //Log.d(TAG, "OnCloseListener.onClose()");
-                resultMap.clear();
-                layoutResults.removeAllViews();
-                return false;
-            }
+        searchView.setOnCloseListener(() -> {
+            //Log.d(TAG, "OnCloseListener.onClose()");
+            resultMap.clear();
+            layoutResults.removeAllViews();
+            return false;
         });
 
     }
@@ -102,12 +96,15 @@ public class SearchActivity extends AppCompatActivity {
     private void geoCodeCityName(String searchStr){
         mLocationSrv.getAddressFromCityName(searchStr, new CompletionString() {
             @Override
-            public void completionStringOk(String addressStr) {
+            public void completionStringOk(String str) {
                 //Log.d(TAG, "found City:: " + addressStr);
-                mLocationSrv.getLocationFromCityName(addressStr, new CompletionGeoLocation() {
+              //  String addressStr = str.replace("null,", "").replace("NULL", "");
+
+
+                mLocationSrv.getLocationFromCityName(str, new CompletionGeoLocation() {
                     @Override
                     public void completionLocationOk(Location location) {
-                       addResultToList(addressStr, location);
+                       addResultToList(str, location);
                     }
 
                     @Override
@@ -135,31 +132,25 @@ public class SearchActivity extends AppCompatActivity {
         }
         resultMap.put(addressStr, location);
 
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                //add new city to the list
+        runOnUiThread(() -> {
+            //add new city to the list
 
-                TextView tv = new TextView(SearchActivity.this);
-                tv.setText(addressStr);
-                tv.setTextColor(getResources().getColor(R.color.snowColor));
+            TextView tv = new TextView(SearchActivity.this);
+            tv.setText(addressStr);
+            tv.setTextColor(getResources().getColor(R.color.snowColor));
 
-                LinearLayout.LayoutParams lllp = new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                lllp.setMargins(8,8,8,8);
-                tv.setLayoutParams(lllp);
+            LinearLayout.LayoutParams lllp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            lllp.setMargins(8,8,8,8);
+            tv.setLayoutParams(lllp);
 
-                tv.setTextSize(18);
-                tv.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        String key = tv.getText().toString();
-                        prepareWeatherRequest(resultMap.get(key));
-                        finish();
-                    }
-                });
-                layoutResults.addView(tv);
-            }
+            tv.setTextSize(18);
+            tv.setOnClickListener(v -> {
+                String key = tv.getText().toString();
+                prepareWeatherRequest(resultMap.get(key));
+                finish();
+            });
+            layoutResults.addView(tv);
         });
 
 
@@ -167,10 +158,10 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void prepareWeatherRequest(Location location){
-        AppShared.location = location;
-        AppShared.isGps = false;
-        AppShared.needsRefresh = true;
-        AppShared.needsGpsWeather = false;
+        AppShared.setLocation(location);
+        AppShared.setIsGps(false);
+        AppShared.setNeedsRefresh(true);
+        AppShared.setNeedsGpsWeather(false);
         //Log.d(TAG, "appshared.location = " + location.toString());
     }
 

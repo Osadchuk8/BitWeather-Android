@@ -20,11 +20,6 @@ import org.json.JSONObject;
 import java.util.TimeZone;
 
 import static com.example.bitweather.DarkSkyForecast.Condition.clear;
-import static com.example.bitweather.DarkSkyForecast.Condition.cloudy;
-import static com.example.bitweather.DarkSkyForecast.Condition.light_snow;
-import static com.example.bitweather.DarkSkyForecast.Condition.partly_cloudy;
-import static com.example.bitweather.UnitsHelper.UnitSystems.ca;
-import static com.example.bitweather.UnitsHelper.UnitSystems.us;
 
 
 public class WeatherSrv {
@@ -79,29 +74,21 @@ public class WeatherSrv {
         Log.d("--DS http request:   ", requestStr);
 
         final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET,
-                requestStr, null, new Response.Listener<JSONObject>() {
-
-
-                    public void onResponse(JSONObject response) {
-                       // textView.setText("Response: " + response.toString());
-                        DarkSkyForecast result = processData(response);
-                        if (result == null) {
+                requestStr, null, response -> {
+                   // textView.setText("Response: " + response.toString());
+                    DarkSkyForecast result = processData(response);
+                    if (result == null) {
 //                            Log.d(TAG, "DarkSkyForecast == null" );
-                            completion.completionError("Invalid JSON from server");
-                        }else{
-                            Log.d(TAG, "DarkSkyForecast response ok" );
-                            completion.completionOk(result);
-                        }
-
+                        completion.completionError("Invalid JSON from server");
+                    }else{
+                        Log.d(TAG, "DarkSkyForecast response ok" );
+                        completion.completionOk(result);
                     }
-                }, new Response.ErrorListener() {
 
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e(TAG, error.toString());
-                        completion.completionError("onResponse ERROR");
+                }, error -> {
+                    Log.e(TAG, error.toString());
+                    completion.completionError("Could not get weather data...");
 
-                    }
                 });
 
         queue.add(jsonObjectRequest);
@@ -233,7 +220,7 @@ public class WeatherSrv {
         return r;
     }
 
-    public String formatPrecipString(UnitsHelper.UnitsStrings2 uStrings, DarkSkyForecast.Condition condition, double value){
+    public String formatPrecipString(UnitsHelper.UnitsStrings uStrings, DarkSkyForecast.Condition condition, double value){
         String r = "";
         String unit = "";
         Boolean isSnow = false;

@@ -161,27 +161,66 @@
                     android:layout_weight="3"
                     android:orientation="vertical">
 
-                    <TextView
-                        android:id="@+id/tv_current_tmp_high"
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:gravity="center"
-                        android:paddingLeft="20sp"
-                        android:textAlignment="textStart"
-                        android:textColor="@android:color/white"
-                        android:textSize="24sp" />
+                        android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/tv_current_tmp_low"
+                        <ImageView
+                            android:id="@+id/imageView2"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:paddingTop="15dp"
+                            app:srcCompat="@drawable/ic_value_up" />
+
+                        <TextView
+                            android:id="@+id/tv_current_tmp_high"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="4"
+                            android:fontFamily="@font/roboto"
+                            android:gravity="center"
+                            android:paddingLeft="10sp"
+                            android:paddingTop="15dp"
+                            android:text="+ 20"
+                            android:textAlignment="viewStart"
+                            android:textColor="@android:color/white"
+                            android:textSize="24sp"
+                            android:typeface="monospace" />
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:gravity="center"
-                        android:paddingLeft="20sp"
-                        android:textAlignment="viewStart"
-                        android:textColor="@android:color/white"
-                        android:textSize="24sp" />
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/imageView3"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:paddingBottom="15dp"
+                            app:srcCompat="@drawable/ic_value_down" />
+
+                        <TextView
+                            android:id="@+id/tv_current_tmp_low"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="4"
+                            android:fontFamily="@font/roboto"
+                            android:gravity="center"
+                            android:paddingLeft="10sp"
+                            android:paddingBottom="15dp"
+                            android:text="- 20"
+                            android:textAlignment="viewStart"
+                            android:textColor="@android:color/white"
+                            android:textSize="24sp"
+                            android:typeface="monospace" />
+                    </LinearLayout>
+
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -514,6 +553,14 @@
                     android:padding="0dp">
 
 
+                    <ImageButton
+                        android:id="@+id/btn_options99"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:background="@android:color/transparent"
+                        android:scaleType="centerInside" />
+
                     <ImageView
                         android:id="@+id/imageView"
                         android:layout_width="0dp"
@@ -530,6 +577,7 @@
                         android:background="@android:color/transparent"
                         android:scaleType="centerInside"
                         app:srcCompat="@drawable/btn_gear" />
+
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>

@@ -1,5 +1,7 @@
 package com.example.bitweather;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -7,7 +9,10 @@ import java.net.SocketAddress;
 
 public class ConnectivityHelper {
 
-
+/**
+ * Checks if internet is reachable.
+ * Async, must be called from background thread
+ */
     public static boolean isOnlineBackground() {
         try {
             int timeoutMs = 1500;
@@ -18,7 +23,10 @@ public class ConnectivityHelper {
             sock.close();
 
             return true;
-        } catch (IOException e) { return false; }
+        } catch (IOException e) {
+            Log.d("``connectivity:", e.getLocalizedMessage());
+            return false;
+        }
     }
 
 
@@ -30,14 +38,6 @@ public class ConnectivityHelper {
             completion.completionStringError("Looks like there is no connection to the internet, please check the settings.");
         }
 
-        //TODO: remove
-//        Thread thread  = new Thread(){
-//            public void run(){
-//
-//            }
-//
-//        };
-//        thread.start();
     }
 
 
